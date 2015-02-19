@@ -1,0 +1,340 @@
+<!--
+
+========================
+== soundSyncedShooter ==
+==    2015 FMS_Cat    ==
+========================
+
+
+thanks :
+	three.js : http://threejs.org/
+	noisejs : https://github.com/josephg/noisejs
+
+-->
+
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<style>
+			*
+			{
+			}
+
+			body
+			{
+				margin : 0;
+				padding : 0;
+				overflow : hidden;
+			}
+			canvas
+			{
+				width : 100%;
+				height : 100%;
+				cursor : none;
+			}
+		</style>
+	</head>
+	<body>
+		<script src="js/three.js"></script>
+		<script src="js/perlin.js"></script>
+		<script src="js/merge.js"></script>
+		<script src="js/Ob.js"></script>
+		<script src="js/Player.js"></script>
+		<script src="js/Enemy.js"></script>
+		<script src="js/LinearEnemy.js"></script>
+		<script src="js/Bacura.js"></script>
+		<script src="js/Particle.js"></script>
+		<script src="js/Bullet.js"></script>
+		<script src="js/Terrain.js"></script>
+		<script>
+
+			// -- key -------------------------
+			var keyP = [];
+			for( var i=0; i<128; i++ ){
+				keyP[i] = false;
+			}
+
+			var keyH = [];
+			for( var i=0; i<128; i++ ){
+				keyH[i] = 0;
+			}
+
+			document.onkeydown = function( _e ){
+				var k = _e.keyCode;
+				if( k < 128 ){
+					keyP[k] = true;
+				}
+			}
+
+			document.onkeyup = function(_e){
+				var k = _e.keyCode;
+				if( k < 128 ){
+					keyP[k] = false;
+				}
+			}
+
+			function lookKeyH(){
+				for( var i=0; i<128; i++ ){
+					if( keyP[i] ){
+						keyH[i] ++;
+					}else{
+						keyH[i] = 0;
+					}
+				}
+			}
+
+			// -- mouse -----------------------
+			var mousePos = new THREE.Vector3( 0, 0, 0 );
+
+			document.onmousemove = function(_e){
+
+				mousePos = getPositionOnScreen( _e.clientX, _e.clientY );
+			}
+
+			// -- THREE -----------------------
+			var scene = new THREE.Scene();
+			var camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 1000 );
+			var renderer = new THREE.WebGLRenderer();
+
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
+
+			var dirLight = new THREE.DirectionalLight( 0xffffff, .2 );
+			dirLight.position.set( 0, .1, 1 );
+			scene.add( dirLight );
+
+			camera.position.z = 30;
+
+			dummyLight = [];
+			for( var i=0; i<128; i++ ){
+				dummyLight[i] = new THREE.PointLight( 0x00000, 0 );
+				scene.add( dummyLight[i] );
+			}
+
+			function randomVec3( _s ){
+
+				return new THREE.Vector3( (Math.random()-.5)*_s*2., (Math.random()-.5)*_s*2., (Math.random()-.5)*_s*2. );
+
+			}
+
+			function randomVec3z0( _s ){
+
+				return new THREE.Vector3( (Math.random()-.5)*_s*2., (Math.random()-.5)*_s*2., 0 );
+
+			}
+
+			function getPositionOnScreen( _x, _y ){
+
+				var x = _x/window.innerWidth*2-1;
+				var y = -_y/window.innerHeight*2+1;
+
+				var ret = new THREE.Vector3( x, y, .5 );
+				ret.unproject(camera);
+				ret.sub( camera.position );
+				ret.multiplyScalar( camera.position.z/-ret.z );
+				ret.add( camera.position );
+				return ret;
+
+			}
+
+			function scaleVector( _s ){
+				return new THREE.Vector3( _s, _s, _s );
+			}
+
+			function isInScreen( _v, _m ){
+				if(
+					-edge.x-_m < _v.x &&
+					_v.x < edge.x+_m &&
+					-edge.y-_m < _v.y &&
+					_v.y < edge.y+_m
+				){
+					return true;
+				}else{
+					return false;
+				}
+			}
+
+			var edge = getPositionOnScreen( 0, 0 );
+
+			// -- audio -----------------------
+			window.AudioContext = window.AudioContext || window.webkitAudioContext;
+			audio = new AudioContext();
+
+			function loadImpulse( _n ){
+
+				var request = new XMLHttpRequest();
+				request.open( 'GET', 'sample/'+_n+'.ogg', true );
+				request.responseType = 'arraybuffer';
+
+				request.onload = function(){
+					audio.decodeAudioData( request.response, function( _b ){
+						convolver.buffer = _b;
+					} );
+				};
+
+				request.send();
+
+			}
+
+			var masterVolume = audio.createGain();
+			masterVolume.gain.value = .6;
+			masterVolume.connect( audio.destination );
+
+			var convolver = audio.createConvolver();
+			var convolverGain = audio.createGain();
+			convolverGain.gain.value = .2;
+			loadImpulse( 'convolverImpulse' );
+			convolver.connect( convolverGain );
+			convolverGain.connect( masterVolume );
+
+			var samples = {};
+			var loadSampleCount = 0;
+			var loadSampleDone = 0;
+
+			function loadSample( _n ){
+
+				loadSampleCount ++;
+
+				var request = new XMLHttpRequest();
+				request.open( 'GET', 'sample/'+_n+'.ogg', true );
+				request.responseType = 'arraybuffer';
+
+				request.onload = function(){
+					audio.decodeAudioData( request.response, function( _b ){
+						samples[_n] = _b;
+						samples[_n].name = _n;
+						samples[_n].lastStep = 0;
+						loadSampleDone ++;
+					} );
+				};
+
+				request.send();
+
+			}
+
+			function playSample( _b ){
+
+				if( _b && _b.lastStep != step ){
+					_b.lastStep = step;
+					var source = audio.createBufferSource();
+					source.buffer = _b;
+					source.connect( convolver );
+					source.connect( masterVolume );
+					source.start();
+				}
+
+			}
+
+			loadSample( 'kick' );
+			loadSample( 'clap909' );
+			for( var i=0; i<3; i++ ){ loadSample( 'hihat909'+i ); }
+			loadSample( 'hihat909open' );
+			for( var i=0; i<6; i++ ){ loadSample( 'glideLead'+i ); }
+			for( var i=0; i<32; i++ ){ loadSample( 'pianoSlice'+i ); }
+			for( var i=0; i<9; i++ ){ loadSample( 'roomDrum'+i ); }
+			for( var i=0; i<9; i++ ){ loadSample( 'roomDrumVoc'+i ); }
+			loadSample( 'borealForest' );
+			loadSample( 'formantix' );
+			loadSample( 'syncAir' );
+			for( var i=0; i<0; i++ ){ loadSample( 'trancePluckA'+i ); }
+			for( var i=0; i<0; i++ ){ loadSample( 'trancePluckB'+i ); }
+
+			// -- gameObject ------------------
+			var enemies = [];
+
+			var player = new Player();
+			var left = 3;
+
+			var terrain = new Terrain();
+
+			// -- beat ------------------------
+			var lastTime = +new Date();
+			var step = 0;
+			var bpm = 140;
+			var beat = 0;
+
+			// -- loop ------------------------
+
+			function loop(){
+
+				var now = +new Date();
+				if( 60000/bpm/4 < now - lastTime ){
+					while( 60000/bpm/4 < now - lastTime ){
+						step ++;
+						lastTime += 60000/bpm/4;
+					}
+					player.raycast();
+
+					for( var i=0; i<enemies.length; i++ ){
+						enemies[i].beat();
+					}
+
+					if( step%4 == 0 ){
+						beat = 1;
+						playSample( samples.kick );
+					}
+
+					if(step%30 == 0){
+						var x = Math.random()*40-20;
+						for( var i=0; i<5; i++ ){
+							enemies.push( new LinearEnemy( {
+								position : new THREE.Vector3( x, edge.y+2+i*3, 0 ),
+								color : new THREE.Color( .2, .8, .5 )
+							} ) );
+						}
+					}
+
+					if(step%16 == 0){
+						enemies.push( new Bacura( {
+							position : new THREE.Vector3( Math.random()*40-20, edge.y+2+i*3, 0 )
+						} ) );
+					}
+				}
+				beat *= .9;
+
+				setTimeout( loop, 1 );
+
+			}
+			loop();
+
+
+			function draw(){
+
+				lookKeyH();
+
+				edge = getPositionOnScreen( window.innerWidth, 0 );
+
+				for( var i=0; i<enemies.length; i++ ){
+					enemies[i].move();
+				}
+				player.move();
+
+				terrain.draw();
+				for( var i=0; i<enemies.length; i++ ){
+					enemies[i].draw();
+				}
+				player.draw();
+
+				renderer.render( scene, camera );
+
+				player.collision();
+
+				if( dummyLight ){
+
+					for( var i=0; i<128; i++ ){
+						scene.remove( dummyLight[i] );
+					}
+					dummyLight = null;
+
+				}
+
+				requestAnimationFrame( draw );
+
+			}
+			requestAnimationFrame( draw );
+		</script>
+	</body>
+</html>
