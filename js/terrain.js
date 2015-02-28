@@ -13,7 +13,7 @@ var Terrain = function(){
 		wireframe : true
 	} );
 	this.model = new THREE.Mesh( geo, mat );
-	this.model.position.set( 0, 0, -10 );
+	this.model.position.set( 0, 0, -5 );
 	scene.add( this.model );
 
 	this.modelWire = new THREE.Mesh( geo, matWire );
@@ -27,7 +27,7 @@ var Terrain = function(){
 Terrain.prototype = Object.create( Ob.prototype );
 Terrain.prototype.constructor = Terrain;
 
-Terrain.prototype.draw = function(){
+Terrain.prototype.loop = function(){
 
 	this.position.y += .03;
 	this.model.position.y = -(this.position.y%2);

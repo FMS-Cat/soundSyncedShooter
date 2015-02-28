@@ -1,3 +1,12 @@
+enemyMaterial = new THREE.MeshLambertMaterial( {
+	shading : THREE.FlatShading
+} );
+enemyMaterialWire = new THREE.MeshLambertMaterial( {
+	shading : THREE.FlatShading,
+	color : 0x222222,
+	wireframe : true
+} );
+
 var enemyModel = new THREE.Object3D();
 enemyLight = new THREE.PointLight();
 enemyLight.intensity = 1;
@@ -8,7 +17,10 @@ var Enemy = function( _p ){
 	Ob.call( this );
 
 	this.life = 0;
-	this.birthStep = 0;
+	this.birthStep = step;
+	this.birthScale = 1;
+	this.shotScale = 0;
+	this.damageScale = 0;
 
 	this.unpierceable = false;
 	this.damageable = false;
@@ -41,34 +53,51 @@ Enemy.prototype.beat = function(){
 
 };
 
-Enemy.prototype.move = function(){
+Enemy.prototype.shot = function(){
 
-};
+	this.shotScale = 1;
 
-Enemy.prototype.draw = function(){
+}
+
+Enemy.prototype.loop = function(){
 
 	this.model.position.copy( this.position );
+
+	this.birthScale *= .9;
+	this.shotScale *= .9;
+	this.damageScale *= .9;
+
+	if( !isInScreen( this.position, 5 ) && this.birthScale < .02 ){
+		this.remove();
+		return 'removed';
+	}
+
+	return 'success';
 
 };
 
 Enemy.prototype.onDamage = function( _point ){
 
-	if( this.lastDamagedStep == step ){ return false; }
+	if( this.lastDamagedStep == step ){ return 'doublehit'; }
 	this.lastDamagedStep = step;
+	this.damageScale = 1;
 
 	this.life --;
 
 	if( this.life == 0 ){
 		this.onDeath();
-		return false;
+		return 'dead';
 	}
 
-	return true;
+	return 'success';
 
 };
 
 Enemy.prototype.onDeath = function(){
 
+	if( this.group ){
+		this.group.score( this.position );
+	}
 	this.remove();
 
 };

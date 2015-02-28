@@ -5,7 +5,7 @@ var particleMaterial = new THREE.MeshLambertMaterial( {
 
 var Particle = function( _p ){
 
-	this.velocity = randomVec3( .1 );
+	this.velocity = new THREE.Vector3( 0, 0, 0 );
 	this.vRotate = randomVec3( .06 );
 
 	var p = merge( {
@@ -29,7 +29,12 @@ var Particle = function( _p ){
 Particle.prototype = Object.create( Enemy.prototype );
 Particle.prototype.constructor = Particle;
 
-Particle.prototype.move = function(){
+Particle.prototype.loop = function(){
+
+	var sup = Enemy.prototype.loop.call( this );
+	if( sup != 'success' ){
+		return sup;
+	}
 
 	this.position.add( this.velocity.clone().multiplyScalar( this.life ) );
 
@@ -37,21 +42,16 @@ Particle.prototype.move = function(){
 	this.modelMain.rotation.y += this.vRotate.y;
 	this.modelMain.rotation.z += this.vRotate.z;
 
+	this.modelMain.scale.copy( scaleVector( this.scale*this.life ) );
+	if( this.light ){
+		this.light.intensity = this.life*this.lightPower;
+	}
+
 	this.life *= .9;
 
 	if( this.life < .01 ){
 		this.remove();
-	}
-
-}
-
-Particle.prototype.draw = function(){
-
-	Enemy.prototype.draw.call( this );
-
-	this.modelMain.scale.copy( scaleVector( this.scale*this.life ) );
-	if( this.light ){
-		this.light.intensity = this.life*this.lightPower;
+		return 'removed';
 	}
 
 }

@@ -1,51 +1,55 @@
-linearEnemyGeometry = new THREE.TetrahedronGeometry( 1 );
+middleBossSmallGeometry = new THREE.TorusGeometry( .7, .4, 16, 16 );
 
-var LinearEnemy = function( _p ){
+var MiddleBossSmall = function( _p ){
 
-	this.velocity = new THREE.Vector3( 0, -.1, 0 );
-	this.vRotate = new THREE.Vector3( .04, .04, 0 );
+	this.invertAim = false;
+	this.groupId = 0;
 
 	var p = merge( {
 		life : 4,
 		damageable : true,
-		color : new THREE.Color( .2, .8, .5 ),
+		color : new THREE.Color( .5, .1, .2 ),
 		light : true
 	}, _p );
 
 	Enemy.call( this, p );
 
-	this.modelMain = new THREE.Mesh( linearEnemyGeometry, enemyMaterial.clone() );
+	this.velocity = new THREE.Vector3( .07, 0, 0 );
+
+	this.modelMain = new THREE.Mesh( middleBossSmallGeometry, enemyMaterial.clone() );
 	this.model.add( this.modelMain );
 
 };
 
-LinearEnemy.prototype = Object.create( Enemy.prototype );
-LinearEnemy.prototype.constructor = LinearEnemy;
+MiddleBossSmall.prototype = Object.create( Enemy.prototype );
+MiddleBossSmall.prototype.constructor = MiddleBossSmall;
 
-LinearEnemy.prototype.beat = function(){
+MiddleBossSmall.prototype.beat = function(){
 
-	if( Math.random() < .1 && !player.missing && isInScreen( this.position, 0 ) && this.birthScale < .02 ){
+	if( (step+this.groupId)%6 == 0 && isInScreen( this.position, 0 ) && this.birthScale<.02 ){
 		this.shot();
 	}
 
 };
 
-LinearEnemy.prototype.shot = function(){
+MiddleBossSmall.prototype.shot = function(){
 
 	Enemy.prototype.shot.call( this );
 
-	enemies.push( new Bullet( {
-		position : this.position.clone(),
-		bulletType : 11,
-		velocity : player.position.clone().sub( this.position ).normalize().multiplyScalar( .1 ),
-		birthAccel : 3
-	} ) );
+	for( var i=0; i<3; i++ ){
+		enemies.push( new Bullet( {
+			position : this.position.clone().add( new THREE.Vector3( 0, this.invertAim?.9:-.9, 0 ) ),
+			bulletType : 1,
+			velocity : new THREE.Vector3( 0, this.invertAim?.12:-.12, 0 ).applyAxisAngle( new THREE.Vector3( 0, 0, 1 ), i*.3-.3 ),
+			birthAccel : 2
+		} ) );
+	}
 
-	playSample( samples['roomDrum5'] );
+	playSample( samples['ties'+~~(Math.random()*4)] );
 
-}
+};
 
-LinearEnemy.prototype.loop = function(){
+MiddleBossSmall.prototype.loop = function(){
 
 	var sup = Enemy.prototype.loop.call( this );
 	if( sup != 'success' ){
@@ -58,8 +62,8 @@ LinearEnemy.prototype.loop = function(){
 
 	this.position.add( this.velocity );
 
-	this.model.rotation.x += this.vRotate.x*(1+this.damageScale);
-	this.model.rotation.y += this.vRotate.y*(1+this.damageScale);
+	this.model.rotation.x += .04;
+	this.model.rotation.y += .03;
 	this.model.scale.copy( scaleVector( (1+this.damageScale*.2+this.shotScale*.4)*(1-this.birthScale) ) );
 
 	var col = this.color.clone().lerp( new THREE.Color( 1, 1, 1 ), this.shotScale*.4+this.damageScale*.5 );
@@ -70,7 +74,7 @@ LinearEnemy.prototype.loop = function(){
 
 };
 
-LinearEnemy.prototype.onDamage = function( _point ){
+MiddleBossSmall.prototype.onDamage = function( _point ){
 
 	var sup = Enemy.prototype.onDamage.call( this, _point );
 	if( sup != 'success' ){
@@ -84,11 +88,10 @@ LinearEnemy.prototype.onDamage = function( _point ){
 		scale : .2
 	} ) );
 
-	playSample( samples['hihat909'+~~(Math.random()*3)] );
-
+	playSample( samples['tom808'+~~(Math.random()*3)] );
 };
 
-LinearEnemy.prototype.onDeath = function(){
+MiddleBossSmall.prototype.onDeath = function(){
 
 	Enemy.prototype.onDeath.call( this );
 
@@ -108,6 +111,6 @@ LinearEnemy.prototype.onDeath = function(){
 		lightPower : 4.5
 	} ) );
 
-	playSample( samples['hihat909open'] );
+	playSample( samples['snareLinn'] );
 
 };

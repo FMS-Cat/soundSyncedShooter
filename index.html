@@ -35,20 +35,44 @@ thanks :
 				height : 100%;
 				cursor : none;
 			}
+
+			#info
+			{
+				position : absolute;
+				top : 0;
+				left : 0;
+				background : none;
+				color : #fff;
+				opacity : .5;
+				font-size : 48px;
+			}
 		</style>
 	</head>
 	<body>
+		<div id="info"></div>
 		<script src="js/three.js"></script>
 		<script src="js/perlin.js"></script>
 		<script src="js/merge.js"></script>
 		<script src="js/Ob.js"></script>
 		<script src="js/Player.js"></script>
 		<script src="js/Enemy.js"></script>
+		<script src="js/enemyWave.js"></script>
+		<script src="js/enemyPattern.js"></script>
+		<script src="js/EnemyGroup.js"></script>
 		<script src="js/LinearEnemy.js"></script>
+		<script src="js/turnEnemy.js"></script>
+		<script src="js/bird.js"></script>
+		<script src="js/Missile.js"></script>
+		<script src="js/Circle20hedron.js"></script>
+		<script src="js/RollingRhombus.js"></script>
+		<script src="js/MiddleBoss.js"></script>
+		<script src="js/MiddleBossSmall.js"></script>
 		<script src="js/Bacura.js"></script>
+		<script src="js/Can.js"></script>
 		<script src="js/Particle.js"></script>
 		<script src="js/Bullet.js"></script>
 		<script src="js/Terrain.js"></script>
+		<script src="js/Score.js"></script>
 		<script>
 
 			// -- key -------------------------
@@ -90,7 +114,6 @@ thanks :
 			var mousePos = new THREE.Vector3( 0, 0, 0 );
 
 			document.onmousemove = function(_e){
-
 				mousePos = getPositionOnScreen( _e.clientX, _e.clientY );
 			}
 
@@ -102,32 +125,27 @@ thanks :
 			renderer.setSize( window.innerWidth, window.innerHeight );
 			document.body.appendChild( renderer.domElement );
 
-			var dirLight = new THREE.DirectionalLight( 0xffffff, .2 );
+			var dirLight = new THREE.DirectionalLight( 0xffffff, .6 );
 			dirLight.position.set( 0, .1, 1 );
 			scene.add( dirLight );
 
 			camera.position.z = 30;
 
 			dummyLight = [];
-			for( var i=0; i<128; i++ ){
+			for( var i=0; i<32; i++ ){
 				dummyLight[i] = new THREE.PointLight( 0x00000, 0 );
 				scene.add( dummyLight[i] );
 			}
 
 			function randomVec3( _s ){
-
 				return new THREE.Vector3( (Math.random()-.5)*_s*2., (Math.random()-.5)*_s*2., (Math.random()-.5)*_s*2. );
-
 			}
 
 			function randomVec3z0( _s ){
-
 				return new THREE.Vector3( (Math.random()-.5)*_s*2., (Math.random()-.5)*_s*2., 0 );
-
 			}
 
 			function getPositionOnScreen( _x, _y ){
-
 				var x = _x/window.innerWidth*2-1;
 				var y = -_y/window.innerHeight*2+1;
 
@@ -137,7 +155,6 @@ thanks :
 				ret.multiplyScalar( camera.position.z/-ret.z );
 				ret.add( camera.position );
 				return ret;
-
 			}
 
 			function scaleVector( _s ){
@@ -229,24 +246,47 @@ thanks :
 			}
 
 			loadSample( 'kick' );
-			loadSample( 'clap909' );
+			for( var i=0; i<3; i++ ){ loadSample( 'bass'+i ); }
 			for( var i=0; i<3; i++ ){ loadSample( 'hihat909'+i ); }
 			loadSample( 'hihat909open' );
 			for( var i=0; i<6; i++ ){ loadSample( 'glideLead'+i ); }
 			for( var i=0; i<32; i++ ){ loadSample( 'pianoSlice'+i ); }
 			for( var i=0; i<9; i++ ){ loadSample( 'roomDrum'+i ); }
 			for( var i=0; i<9; i++ ){ loadSample( 'roomDrumVoc'+i ); }
-			loadSample( 'borealForest' );
 			loadSample( 'formantix' );
 			loadSample( 'syncAir' );
-			for( var i=0; i<0; i++ ){ loadSample( 'trancePluckA'+i ); }
-			for( var i=0; i<0; i++ ){ loadSample( 'trancePluckB'+i ); }
-
+			for( var i=0; i<3; i++ ){ loadSample( 'tranceChordA'+i ); }
+			for( var i=0; i<3; i++ ){ loadSample( 'tranceChordB'+i ); }
+			loadSample( 'bacura' );
+			for( var i=0; i<3; i++ ){ loadSample( 'tom808'+i ); }
+			loadSample( 'snare909' );
+			loadSample( 'snare808' );
+			loadSample( 'snare707' );
+			loadSample( 'snareLinn' );
+			for( var i=0; i<8; i++ ){ loadSample( 'mutatedConga'+i ); }
+			for( var i=0; i<9; i++ ){ loadSample( 'tranceArpPluck'+i ); }
+			for( var i=0; i<3; i++ ){ loadSample( 'birdChord'+i ); }
+			for( var i=0; i<5; i++ ){ loadSample( 'fami9th'+i ); }
+			for( var i=0; i<4; i++ ){ loadSample( 'cosmicBellpad'+i ); }
+			for( var i=0; i<4; i++ ){ loadSample( 'cosmicBellpadR'+i ); }
+			loadSample( 'bpfSquare' );
+			loadSample( 'upTri' );
+			for( var i=0; i<5; i++ ){ loadSample( 'amen'+i ); }
+			for( var i=0; i<4; i++ ){ loadSample( 'ties'+i ); }
+			loadSample( 'zap' );
+			loadSample( 'chime' );
+			loadSample( 'miss' );
 			// -- gameObject ------------------
 			var enemies = [];
+			var enemyCue = [];
+			enemyCue[8] = undefined;
 
 			var player = new Player();
-			var left = 3;
+			var left = 2;
+			var wave = 0;
+			var boss = 0;
+			var score = 0;
+			var scoreAni = 0;
 
 			var terrain = new Terrain();
 
@@ -259,6 +299,16 @@ thanks :
 			// -- loop ------------------------
 
 			function loop(){
+
+				if( loadSampleCount != loadSampleDone ){
+					document.getElementById( 'info' ).innerHTML = 'Loading samples ... '+loadSampleDone+'/'+loadSampleCount;
+					setTimeout( loop, 1 );
+					return;
+				}
+
+				if( left < 0 ){
+					return;
+				}
 
 				var now = +new Date();
 				if( 60000/bpm/4 < now - lastTime ){
@@ -275,23 +325,34 @@ thanks :
 					if( step%4 == 0 ){
 						beat = 1;
 						playSample( samples.kick );
+					}else{
+						playSample( samples['bass'+((step%4)-1)] );
 					}
 
-					if(step%30 == 0){
-						var x = Math.random()*40-20;
-						for( var i=0; i<5; i++ ){
-							enemies.push( new LinearEnemy( {
-								position : new THREE.Vector3( x, edge.y+2+i*3, 0 ),
-								color : new THREE.Color( .2, .8, .5 )
-							} ) );
+					(function(){
+						var cue = enemyCue.shift();
+						if( typeof( cue ) == 'function' ){
+							cue();
 						}
-					}
 
-					if(step%16 == 0){
-						enemies.push( new Bacura( {
-							position : new THREE.Vector3( Math.random()*40-20, edge.y+2+i*3, 0 )
-						} ) );
-					}
+						if( enemyCue.length == 0 && boss == 0 ){
+							wave ++;
+
+							enemies.push( new Score( {
+								position : new THREE.Vector3( 0, 0, 0 ),
+								string : 'wave '+String( wave ),
+								scale : .5,
+								lifeDecay : .98
+							} ) );
+							playSample( samples['bpfSquare'] );
+
+							if( 10 <= wave ){
+								enemyCue = enemyWave[wave%2+10]();
+							}else{
+								enemyCue = enemyWave[wave]();
+							}
+						}
+					}());
 				}
 				beat *= .9;
 
@@ -303,20 +364,22 @@ thanks :
 
 			function draw(){
 
+				if( loadSampleCount != loadSampleDone ){
+					requestAnimationFrame( draw );
+					return;
+				}
+
 				lookKeyH();
 
 				edge = getPositionOnScreen( window.innerWidth, 0 );
 
+				terrain.loop();
 				for( var i=0; i<enemies.length; i++ ){
-					enemies[i].move();
+					if( enemies[i].loop() == 'removed' ){
+						i --;
+					}
 				}
-				player.move();
-
-				terrain.draw();
-				for( var i=0; i<enemies.length; i++ ){
-					enemies[i].draw();
-				}
-				player.draw();
+				player.loop();
 
 				renderer.render( scene, camera );
 
@@ -324,17 +387,29 @@ thanks :
 
 				if( dummyLight ){
 
-					for( var i=0; i<128; i++ ){
+					for( var i=0; i<dummyLight.length; i++ ){
 						scene.remove( dummyLight[i] );
 					}
 					dummyLight = null;
 
 				}
 
+				info();
+
 				requestAnimationFrame( draw );
 
 			}
 			requestAnimationFrame( draw );
+
+			// -- info ------------------------
+			var info = function(){
+				scoreAni += ( score-scoreAni )*.3;
+				document.getElementById( 'info' ).innerHTML = '\
+					Score : '+Math.round(scoreAni)+'<br>\
+					Left : '+left+'<br>\
+					Wave : '+wave;
+			};
+
 		</script>
 	</body>
 </html>
