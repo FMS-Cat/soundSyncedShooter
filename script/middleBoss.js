@@ -33,6 +33,8 @@ var MiddleBoss = function( _p ){
   }
 	this.model.scale.copy( scaleVector( 0 ) );
 
+	playSample( samples['bpfSquare'] );
+
   boss ++;
 
 };
