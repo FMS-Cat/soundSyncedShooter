@@ -3,6 +3,7 @@ bacuraMaterial = new THREE.MeshLambertMaterial( {
 	shading : THREE.FlatShading
 } );
 
+
 var Bacura = function( _p ){
 
 	this.velocity = new THREE.Vector3( 0, -.1, 0 );

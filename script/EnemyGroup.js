@@ -9,6 +9,7 @@ var EnemyGroup = function( _c, _baseScore, _bonusScore, _sample ){
 
 }
 
+
 EnemyGroup.prototype.score = function( _v ){
 
 	score += this.baseScore;

@@ -3,6 +3,7 @@ canMaterial = new THREE.MeshLambertMaterial( {
 	shading : THREE.FlatShading
 } );
 
+
 var Can = function( _p ){
 
 	this.velocity = new THREE.Vector3( Math.random()<.5?.07:-.07, 0, 0 );
