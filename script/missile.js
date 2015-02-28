@@ -46,11 +46,12 @@ Missile.prototype.shot = function(){
 
 	for( var ix=0; ix<2; ix++ ){
 		for(var iy=0; iy<3; iy++ ){
-			var b = (ix*2-1)*2;
+			var b = (ix*2-1)*1;
 			var pos = this.position.clone().add( new THREE.Vector3( -Math.sin(this.angle)*b, Math.cos(this.angle)*b, 0 ) );
 			enemies.push( new Bullet( {
 				position : pos.clone(),
-				bulletType : 12,
+				bulletType : 1,
+				scale : .3,
 				velocity : new THREE.Vector3( Math.cos(this.angle-b*.1), Math.sin(this.angle-b*.1), 0 ).multiplyScalar(.07+.03*iy),
 				birthAccel : 3
 			} ) );
@@ -77,7 +78,6 @@ Missile.prototype.loop = function(){
 	this.velocity += this.accel;
 	this.velocity *= .98;
 
-	console.log( Math.atan2( player.position.y-this.position.y, player.position.x-this.position.x ) );
 	this.angle -= Math.sign( ( Math.atan2( player.position.y-this.position.y, player.position.x-this.position.x )-this.angle+Math.PI )%Math.PI*2-Math.PI )*.01;
 
 	this.model.rotation.z = this.angle-Math.PI/2;

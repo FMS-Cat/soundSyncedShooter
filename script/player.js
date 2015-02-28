@@ -207,7 +207,7 @@ Player.prototype.miss = function(){
 			position : new THREE.Vector3( 0, 0, 0 ),
 			string : 'game over',
 			scale : .5,
-			lifeDecay : .98
+			lifeDecay : 1
 		} ) );
 	}
 

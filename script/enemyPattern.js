@@ -84,7 +84,7 @@ enemyPattern.bird = function( _s ){
       } ) );
       if( _i != 0 ){
         enemies.push( new Bird( {
-          position : new THREE.Vector3( _x-i*2, edge.y, 0 ),
+          position : new THREE.Vector3( _x-_i*2, edge.y, 0 ),
           group : _g
         } ) );
       }

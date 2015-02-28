@@ -8,7 +8,7 @@ var scoreFont = {
 	'1' : 6426756,
 	'2' : 16267327,
 	'3' : 16268815,
-	'4' : 19463696,
+	'4' : 18415120,
 	'5' : 32554511,
 	'6' : 14728750,
 	'7' : 33079824,
@@ -30,6 +30,7 @@ var Score = function( _p ){
 	this.string = '';
 	this.sublife = 1;
 	this.lifeDecay = .9;
+	_p.position.z = -3;
 
 	var p = merge( {
 		scale : .1,
