@@ -30,7 +30,7 @@ var Score = function( _p ){
 	this.string = '';
 	this.sublife = 1;
 	this.lifeDecay = .9;
-	_p.position.z = -3;
+	_p.position.z = -1;
 
 	var p = merge( {
 		scale : .1,
