@@ -116,7 +116,7 @@ enemyPattern.missile = function( _s ){
 
   var cue = [];
 
-  var g = new EnemyGroup( 6, 100, 1500 );
+  var g = new EnemyGroup( 6, 100, 1000, 'roomDrum3' );
   for( var i=0; i<2; i++ ){
     var x = (Math.random()-.5)*edge.x*1.4;
     cue[_s+i*6] = f( x, g );
@@ -129,7 +129,7 @@ enemyPattern.circle20hedron = function( _s ){
   var f = function( _g ){
     return function(){
       enemies.push( new Circle20hedron( {
-        position : new THREE.Vector3( (Math.random()*edge.x-.5)*1.4, edge.y, 0 ),
+        position : new THREE.Vector3( edge.x*(Math.random()-.5)*1.4, edge.y, 0 ),
         group : g
       } ) );
     };
