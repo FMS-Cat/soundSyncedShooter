@@ -129,7 +129,7 @@ enemyPattern.circle20hedron = function( _s ){
   var f = function( _g ){
     return function(){
       enemies.push( new Circle20hedron( {
-        position : new THREE.Vector3( Math.random()*40-20, edge.y, 0 ),
+        position : new THREE.Vector3( (Math.random()*edge.x-.5)*1.4, edge.y, 0 ),
         group : g
       } ) );
     };
@@ -146,7 +146,7 @@ enemyPattern.circle20hedron = function( _s ){
 enemyPattern.circle20hedronDouble = function( _s ){
   var f = function( _g, _g2 ){
     return function(){
-      var x = 10 + Math.random(10);
+      var x = (Math.random()*.5+.3)*edge.x;
       enemies.push( new Circle20hedron( {
         position : new THREE.Vector3( x, edge.y, 0 ),
         group : g
