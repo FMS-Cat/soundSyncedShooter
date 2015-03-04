@@ -7,8 +7,7 @@ var EnemyGroup = function( _c, _baseScore, _bonusScore, _sample ){
 	this.bonusScore = _bonusScore;
 	this.sample = _sample;
 
-}
-
+};
 
 EnemyGroup.prototype.score = function( _v ){
 
